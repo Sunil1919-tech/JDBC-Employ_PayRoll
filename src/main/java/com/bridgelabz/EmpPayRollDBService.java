@@ -1,39 +1,47 @@
 package com.bridgelabz;
 
-import java.sql.Connection;
-import java.sql.Driver;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.Enumeration;
+import java.sql.*;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 public class EmpPayRollDBService {
     /**
      * Declaring Main Method Here
      * For Getting The Connection Of DataBase
      */
-    public static void main(String[] args) {
+    private Connection getConnection() throws SQLException {
         String jdbcURL = "jdbc:mysql://localhost:3306/payroll_service?userSSL=false";
         String userName = "root";
         String password = "1234";
         Connection connection;
-        try {
-            System.out.println("connecting to database : " + jdbcURL);
-            connection = DriverManager.getConnection(jdbcURL, userName, password);
-            System.out.println("Connection to the Database Successfully! :" + connection);
-            Class.forName("com.mysql.jdbc.Driver");
-            System.out.println("Driver Loaded");
-
-        } catch (SQLException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        listDrivers();
+        System.out.println("connecting to database : " + jdbcURL);
+        connection = DriverManager.getConnection(jdbcURL, userName, password);
+        System.out.println("Connection to the Database Successfully! :" + connection);
+        return connection;
     }
 
-    private static void listDrivers() {
-        Enumeration<Driver> driverList = DriverManager.getDrivers();
-        while (driverList.hasMoreElements()) {
-            System.out.println(driverList.nextElement());
+    /**
+     * retreiving the data from the database to get person salary
+     */
+    public List<EmpPayRollData> readData() {
+        String sql = "select * from employee_payroll ";
+        List<EmpPayRollData> employeePayRollList = new ArrayList<>();
+        try {
+            Connection connection = this.getConnection();
+            Statement statement = connection.createStatement();
+            ResultSet result = statement.executeQuery(sql);
+            while (result.next()) {
+                int id = result.getInt("id");
+                String name = result.getString("name");
+                double basic_pay = result.getDouble("basic_pay");
+                LocalDate startDate = result.getDate("start").toLocalDate();
+                employeePayRollList.add(new EmpPayRollData(id, name, basic_pay, startDate));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
+        return employeePayRollList;
     }
 }
 
